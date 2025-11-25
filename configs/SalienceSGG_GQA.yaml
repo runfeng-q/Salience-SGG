@@ -1,0 +1,87 @@
+model:
+  #backbone
+  backbone: 'resnet50'    #Name of the convolutional backbone to use
+  dilation: False   #If true, we replace stride with dilation in the last convolutional block (DC5)
+  position_embedding: 'sine' #Type of positional embedding to use on top of the image features
+  position_embedding_scale: '2*np.pi'
+  num_feature_levels: 4
+
+  #transfomer
+  enc_layers: 6
+  dec_layers: 6
+  dim_feedforward: 2048
+  hidden_dim: 256
+  dropout: 0.0
+  nheads: 8
+  num_queries: 200
+  dec_n_points: 4
+  enc_n_points: 4
+  aux_loss: False
+  with_box_refine: True
+  two_stage: False
+  num_classes: 200
+  num_rel_labels: 100
+  prior_static: 'logs/gqa_static_prior.pt'
+  use_fre_bias: False
+  glove_embed: 'logs/gqa_glove_6B.300d.pt'
+  tau: 0
+  iou_t: 0.5
+  salience_layer: 4
+  cascadic: True
+
+  #segmentation
+  masks: False         #Train segmentation head if the flag is provided
+  frozen_weights: None #Path to the pretrained model. If set, only the mask head will be trained
+
+  #matcher
+  set_cost_class: 2
+  set_cost_bbox: 5
+  set_cost_giou: 2
+
+  #loss
+  losses: ['salient_full_conf','relations']
+  loss_confidence_coef: 1
+  loss_rel_coef: 1
+  giou_loss_coef: 2
+  focal_alpha: 0.25
+  bbox_loss_coef: 5
+  cls_loss_coef: 2
+  mask_loss_coef: 1
+  dice_loss_coef: 1
+
+  #optimizer
+  sgd: False
+  lr: 1e-4
+  lr_backbone_names: [ "backbone.0" ]
+  lr_backbone: 1e-5
+  lr_linear_proj_names: [ 'reference_points', 'sampling_offsets' ]
+  lr_linear_proj_mult: 0.1
+  weight_decay: 1e-4
+  lr_drop: 11
+  lr_drop_epochs: None
+  resume:
+    ckpt: 'logs/salience_gqa_iou_0.5.ckpt'
+  data: 'gqa'
+trainer:
+  device: [1]
+  epochs: 13
+  gradient_clip_val: 0.1 #gradient clipping max norm to avoid gradient explosion
+  seed: 22
+  accumulate: 2
+
+data:
+  root: 'dataset_path'
+  dataset: 'GQA_SGG'
+  batch_size: 8
+  pin_memory: True
+  num_workers: 32
+  num_queries: 200
+
+logger:
+  experiment_name: salience_sgg_gqa
+  version: 'test'
+
+
+callback:
+  monitor: 'K_F@100'
+  mode: max
