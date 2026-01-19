@@ -111,7 +111,6 @@ class SalienceSGGModule(L.LightningModule):
         avg_rel_loss = torch.stack([x['_loss_relation'] for x in self.val_output_list]).mean()
         recall['loss_confidence'] = avg_confidence_loss
         recall['loss_rel'] = avg_rel_loss
-        del self.evaluator
 
     def on_test_start(self) -> None:
         self.model.eval()
